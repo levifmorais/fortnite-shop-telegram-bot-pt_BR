@@ -53,13 +53,13 @@ def start_command(update, context):
 # Comando /ajuda
 def help_command(update, context):
     
-    comandos = """
+    commands = """
     Comandos disponíveis:\n 
     /loja - Mostra a loja atual do fortnite\n
     /ajuda - Mostra os comandos disponíveis\n
     """
     
-    update.message.reply_text(comandos)
+    update.message.reply_text(commands)
 
 # Comando /loja
 def shop_command(update, context):
