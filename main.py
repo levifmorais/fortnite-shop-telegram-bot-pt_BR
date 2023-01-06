@@ -14,35 +14,100 @@ print('Bot iniciado!')
 # Função que pega a loja atual do fortnite, é esperado retornar uma string
 def get_shop() -> str:
     
-    response = requests.get(url='https://fortnite-api.com/v2/shop/br/combined', params={'language': 'pt-BR'})
+    response = requests.get(url='https://fortnite-api.com/v2/shop/br/combined')
+
+    #response = requests.get(url='https://fortnite-api.com/v2/shop/br/combined', params={'language': 'pt-BR'})
 
     received_data = response.json()
-    
+        
     text = ''
 
-    for entry in received_data['data']['daily']['entries']:
-        for item in entry['items']:
-            
-            name = item['name']
-            price = entry['finalPrice']
-            item_type = item['type']['value']
+    section_name = {}
 
-            match item_type:
-                case 'outfit':
-                    item_type = 'Skin'
-                case 'backpack':
-                    item_type = 'Mochila'
-                case 'pickaxe':
-                    item_type = 'Picareta'
-                case 'emote':
-                    item_type = 'Emote'
-                case 'glider':
-                    item_type = 'Asa-delta'
-                case 'wrap':
-                    item_type = 'Envelopamento'
+    for section in received_data['data']:
+        section_value = received_data['data'].get(section)
+        
 
-            text += f"\n{name} - {price} Vbucks - {item_type}\n"
+        if isinstance(section_value, dict):
+
+            text += f"\n\n{section.capitalize()}\n\n"
+
+
+            for entry in received_data['data'][section]['entries']:
+                
+                entry_section = entry['section']['name']
+
+                if entry_section not in section_name:
+                    section_name[entry_section] = []
+
+                if entry['bundle'] == None:
+                    for item in entry['items']:
+                        name = item['name']
+                        price = entry['finalPrice']
+                        item_type = item['type']['value']
+
+                        match item_type:
+                            case 'outfit':
+                                item_type = 'Skin'
+                            case 'backpack':
+                                item_type = 'Mochila'
+                            case 'pickaxe':
+                                item_type = 'Picareta'
+                            case 'emote':
+                                item_type = 'Emote'
+                            case 'glider':
+                                item_type = 'Asa-delta'
+                            case 'wrap':
+                                item_type = 'Envelopamento'
+                            case 'music':
+                                item_type = 'Música'
     
+                        section_name[entry_section].append(f"\n{name} - {price} Vbucks - {item_type}\n")
+
+                        #text += f"\n{name} - {price} Vbucks - {item_type}\n"
+                else:
+                    section_name[entry_section].append(f"\n{entry['bundle']['name']} - {entry['finalPrice']} Vbucks\n - Pacote\n")
+                    #text += f"\n{entry['bundle']['name']} - {entry['finalPrice']} Vbucks\n - Pacote\n"
+
+    #for section in sections:
+#
+    #    text += f"\n\n{section.capitalize()}\n\n"
+#
+    #    for entry in received_data['data'][section]['entries']:
+    #        
+    #        if entry['bundle'] == None:
+    #            for item in entry['items']:
+    #                
+    #                name = item['name']
+    #                price = entry['finalPrice']
+    #                item_type = item['type']['value']
+#
+    #                match item_type:
+    #                    case 'outfit':
+    #                        item_type = 'Skin'
+    #                    case 'backpack':
+    #                        item_type = 'Mochila'
+    #                    case 'pickaxe':
+    #                        item_type = 'Picareta'
+    #                    case 'emote':
+    #                        item_type = 'Emote'
+    #                    case 'glider':
+    #                        item_type = 'Asa-delta'
+    #                    case 'wrap':
+    #                        item_type = 'Envelopamento'
+    #                    case 'music':
+    #                        item_type = 'Música'
+    #                text += f"\n{name} - {price} Vbucks - {item_type}\n"
+    #        else:
+    #            text += f"\n{entry['bundle']['name']} - {entry['finalPrice']} Vbucks\n - Pacote\n"
+
+    print(section_name)
+
+    for key, value in section_name.items():
+        text += f"\n\n{key.capitalize()}\n\n"
+        for item in value:
+            text += item
+
     return text
 
 
@@ -64,8 +129,13 @@ def help_command(update, context):
 # Comando /loja
 def shop_command(update, context):
 
-    update.message.reply_text(get_shop)
+    # Pega a loja atual do fortnite,
+    # se o conteúdo da loja for maior que 4096 caracteres, ele divide a mensagem em partes de 4096 caracteres
+    message = get_shop()
 
+    msgs = [message[i:i + 4096] for i in range(0, len(message), 4096)]
+    for text in msgs:
+        update.message.reply_text(text=text)
 
 #def custom_command(update, context):
 #    update.message.reply_text('placeholder')
