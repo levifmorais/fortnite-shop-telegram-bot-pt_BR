@@ -1,5 +1,5 @@
 import requests
-from PIL import Image
+from PIL import Image, ImageOps
 from io import BytesIO
 #from datetime import datetime
 
@@ -18,7 +18,7 @@ rarity_table = {
     'uncommon': (110, 170, 42),
     'rare': (22, 133, 181),
     'epic': (99, 16, 148),
-    'legendary': (185, 19, 162),
+    'legendary': (165, 93, 18),
     'marvel': (144, 46, 42),
     'dc': (55, 76, 131),
     'icon': (66, 156, 151),
@@ -88,9 +88,22 @@ def get_image():
 
     section_name = {}
 
+    x,y = 0,0
+
+    img_size = 512
+    imgs_per_row = 8
+
+    img_size_bundle = 1024
+    imgs_per_row_bundle = 4
+
+    width_per_row = img_size * imgs_per_row
+
+    width_per_row_bundle = img_size_bundle * imgs_per_row_bundle
+    
+
     for section in received_data['data']:
         section_value = received_data['data'].get(section)
-
+        
         if isinstance(section_value, dict):
 
             for entry in received_data['data'][section]['entries']:
@@ -99,25 +112,70 @@ def get_image():
                         
                         url = item['images']['icon']
 
-                        white = (255, 255, 255)
-
                         response_image = requests.get(url)
 
                         image = Image.open(BytesIO((response_image.content)))
+                        image = ImageOps.expand(image, border=15, fill='white')
                         image_bg = Image.new('RGBA', image.size, color = rarity_table[item['rarity']['value']])
-
-                        width, height = new_image.size
                         
-                        new_width = width + image.width
-                        new_height = max(height,image.height)
+                        #TODO 
+                        if x >= img_size * imgs_per_row:
+                            x = 0
+                            y += img_size
 
-                        combined_image = Image.new('RGBA', (new_width, new_height))
+                        new_width = x + image.width
+                        new_height = y + image.height
+                            
+                        combined_image = Image.new('RGBA', (width_per_row, new_height))
                         combined_image.paste(new_image, (0, 0))
-                        combined_image.paste(image_bg, (width, 0))
-                        combined_image.paste(image, (width, 0), image)
+                        combined_image.paste(image_bg, (x,y))
+                        combined_image.paste(image, (x, y), image)
+                        
+
+                        x += img_size
 
                         new_image = combined_image
+            
+    x = 0
+    y = y + img_size
 
+    for section in received_data['data']:
+        section_value = received_data['data'].get(section)
+
+        if isinstance(section_value, dict):
+
+            for entry in received_data['data'][section]['entries']:
+                if entry['bundle'] != None:
+                    item = entry['items'][0]
+                            
+                    url = entry['bundle']['image']
+
+                    response_image = requests.get(url)
+
+                    image = Image.open(BytesIO((response_image.content)))
+                    image = ImageOps.expand(image, border=15, fill='white')
+                    image_bg = Image.new('RGBA', image.size, color = rarity_table[item['rarity']['value']])
+
+                    if x >= img_size_bundle * imgs_per_row_bundle:
+                        x = 0
+                        y += img_size_bundle
+
+                    new_width = x + image.width
+                    new_height = y + image.height
+                                
+                    combined_image = Image.new('RGBA', (width_per_row_bundle, new_height))
+                    combined_image.paste(new_image, (0, 0))
+                    combined_image.paste(image_bg, (x,y))
+                    combined_image.paste(image, (x, y),image)
+                            
+
+                    x += img_size_bundle
+
+                    new_image = combined_image
+    
+
+
+            
     new_image.save('imgs/teste.png')
 
     return 'imgs/teste.png'
