@@ -1,7 +1,8 @@
+import os
 import requests
 from PIL import Image, ImageOps
 from io import BytesIO
-#from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 type_table = {
     'outfit': 'Skin',
@@ -79,105 +80,121 @@ def get_shop() -> str:
 
 def get_image():
 
-        
-    received_data = get_request_pt_br()
-        
-    new_image = Image.new('RGBA',(0,0))
-
-    url = ''
-
-    section_name = {}
-
-    x,y = 0,0
-
-    img_size = 512
-    imgs_per_row = 8
-
-    img_size_bundle = 1024
-    imgs_per_row_bundle = 4
-
-    width_per_row = img_size * imgs_per_row
-
-    width_per_row_bundle = img_size_bundle * imgs_per_row_bundle
     
+    image_date = datetime.fromtimestamp(os.path.getmtime('imgs/loja.jpg')).astimezone(timezone.utc).date()
 
-    for section in received_data['data']:
-        section_value = received_data['data'].get(section)
+    now = datetime.now(timezone.utc).date() 
+
+    if image_date != now:
+        received_data = get_request_pt_br()
+            
+        banner = Image.open('imgs/banner.png')
+
+        new_image = Image.new('RGBA',(banner.size))
+
+        url = ''
+
+        section_name = {}
+
+
+        img_size = 512
+        imgs_per_row = 10
+
+        img_size_bundle = 1024
+        imgs_per_row_bundle = 4
+
+        width_per_row = img_size * imgs_per_row
+
+        width_per_row_bundle = img_size_bundle * imgs_per_row_bundle
         
-        if isinstance(section_value, dict):
+        new_image.paste(banner, (0, 0))
 
-            for entry in received_data['data'][section]['entries']:
-                if entry['bundle'] == None:
+        x,y = 0,banner.height
+
+        for section in received_data['data']:
+            section_value = received_data['data'].get(section)
+            
+            if isinstance(section_value, dict):
+
+                for entry in received_data['data'][section]['entries']:
+                    if entry['bundle'] == None:
+                            item = entry['items'][0]
+                            
+                            url = item['images']['icon']
+
+                            response_image = requests.get(url)
+
+                            image = Image.open(BytesIO((response_image.content)))
+                            image = ImageOps.expand(image, border=15, fill='white')
+                            image_bg = Image.new('RGBA', image.size, color = rarity_table[item['rarity']['value']])
+                            
+                            #TODO 
+                            if x >= img_size * imgs_per_row:
+                                x = 0
+                                y += img_size
+
+                            new_width = x + image.width
+                            new_height = y + image.height
+                                
+                            combined_image = Image.new('RGBA', (width_per_row, new_height))
+                            combined_image.paste(new_image, (0, 0))
+                            combined_image.paste(image_bg, (x,y))
+                            combined_image.paste(image, (x, y), image)
+                            
+
+                            x += img_size
+
+                            new_image = combined_image
+                
+        x = 0
+        y = y + img_size
+
+        for section in received_data['data']:
+            section_value = received_data['data'].get(section)
+
+            if isinstance(section_value, dict):
+
+                for entry in received_data['data'][section]['entries']:
+                    if entry['bundle'] != None:
                         item = entry['items'][0]
-                        
-                        url = item['images']['icon']
+                                
+                        url = entry['bundle']['image']
 
                         response_image = requests.get(url)
 
                         image = Image.open(BytesIO((response_image.content)))
+
+                        image = image.resize((img_size_bundle, img_size_bundle))
+
                         image = ImageOps.expand(image, border=15, fill='white')
                         image_bg = Image.new('RGBA', image.size, color = rarity_table[item['rarity']['value']])
-                        
-                        #TODO 
-                        if x >= img_size * imgs_per_row:
+
+                        if x >= img_size_bundle * imgs_per_row_bundle:
                             x = 0
-                            y += img_size
+                            y += img_size_bundle
 
                         new_width = x + image.width
                         new_height = y + image.height
-                            
-                        combined_image = Image.new('RGBA', (width_per_row, new_height))
+                                    
+                        combined_image = Image.new('RGBA', (width_per_row_bundle, new_height))
                         combined_image.paste(new_image, (0, 0))
                         combined_image.paste(image_bg, (x,y))
-                        combined_image.paste(image, (x, y), image)
-                        
+                        combined_image.paste(image, (x, y),image)
+                                
 
-                        x += img_size
+                        x += img_size_bundle
 
                         new_image = combined_image
-            
-    x = 0
-    y = y + img_size
+        
 
-    for section in received_data['data']:
-        section_value = received_data['data'].get(section)
+        #new_image = ImageOps.expand(new_image, border=30, fill='white')
+        
+        new_image = new_image.resize((new_image.width//4, new_image.height//4))
 
-        if isinstance(section_value, dict):
+        new_image = new_image.convert('RGB').save('imgs/loja.jpg', 'JPEG')
 
-            for entry in received_data['data'][section]['entries']:
-                if entry['bundle'] != None:
-                    item = entry['items'][0]
-                            
-                    url = entry['bundle']['image']
-
-                    response_image = requests.get(url)
-
-                    image = Image.open(BytesIO((response_image.content)))
-                    image = ImageOps.expand(image, border=15, fill='white')
-                    image_bg = Image.new('RGBA', image.size, color = rarity_table[item['rarity']['value']])
-
-                    if x >= img_size_bundle * imgs_per_row_bundle:
-                        x = 0
-                        y += img_size_bundle
-
-                    new_width = x + image.width
-                    new_height = y + image.height
-                                
-                    combined_image = Image.new('RGBA', (width_per_row_bundle, new_height))
-                    combined_image.paste(new_image, (0, 0))
-                    combined_image.paste(image_bg, (x,y))
-                    combined_image.paste(image, (x, y),image)
-                            
-
-                    x += img_size_bundle
-
-                    new_image = combined_image
-    
-
-
-            
-    new_image.save('imgs/teste.png')
-
-    return 'imgs/teste.png'
+    return 'imgs/loja.jpg'
 
 get_image()
+
+
