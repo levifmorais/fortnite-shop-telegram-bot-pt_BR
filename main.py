@@ -22,30 +22,33 @@ def help_command(update, context):
     commands = """
     Comandos disponíveis:
     /loja - Mostra a loja atual do Fortnite
+    /lojatxt - Mostra a loja atual do Fortnite em formato de texto
+    /diaria - Mostra apenas os itens na seção Diária
+    /destaque - Mostra apenas os itens na seção Destaque
     /ajuda - Mostra os comandos disponíveis
     """
     
     update.message.reply_text(commands)
 
-# Comando /loja
-def shop_command(update, context):
+# Comando /lojatxt
+def shop_txt_command(update, context):
 
     # Pega a loja atual do fortnite,
     # se o conteúdo da loja for maior que 4096 caracteres, ele divide a mensagem em partes de 4096 caracteres
-    message = requests_api.get_shop()
+    message = requests_api.get_shop_txt()
 
     msgs = [message[i:i + 4096] for i in range(0, len(message), 4096)]
     for text in msgs:
         update.message.reply_text(text=text)
 
-def image_command(update, context):
+# Comando /loja
+def shop_command(update, context):
 
-    message = requests_api.get_image()
+    message = requests_api.get_shop()
     
     print('gerando imagem...')
 
     context.bot.send_photo(chat_id=update.message.chat_id, photo=open(message, 'rb'), timeout = 1000)
-
 
 # Função que trata a mensagem do usuário, caso não seja um comando.
 def handle_response(text: str) -> str:
@@ -72,8 +75,8 @@ def main():
     # Adiciona os comandos e suas respectivas funções
     dp.add_handler(CommandHandler("start", start_command))
     dp.add_handler(CommandHandler("ajuda", help_command))
+    dp.add_handler(CommandHandler("lojatxt", shop_txt_command))
     dp.add_handler(CommandHandler("loja", shop_command))
-    dp.add_handler(CommandHandler("img", image_command))
 
     # Adiciona a função que trata as mensagens do usuário, caso não seja um comando.
     dp.add_handler(MessageHandler(Filters.text, handle_message))

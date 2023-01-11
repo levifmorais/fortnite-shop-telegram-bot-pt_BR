@@ -4,6 +4,7 @@ from PIL import Image, ImageOps
 from io import BytesIO
 from datetime import datetime, timezone, timedelta
 
+# Dicionário que contém os tipos de itens e seus nomes em português
 type_table = {
     'outfit': 'Skin',
     'backpack': 'Mochila',
@@ -14,6 +15,7 @@ type_table = {
     'music': 'Música'
 }
 
+# Dicionário que contém as raridades e suas cores em RGB
 rarity_table = {
     'common': (85, 89, 88),
     'uncommon': (110, 170, 42),
@@ -31,20 +33,22 @@ rarity_table = {
     'gaminglegends': (54, 43, 143)
 }
 
-
-
+# Retorna um dicionário com os dados da loja atual
 def get_request_pt_br() -> str:
     response = requests.get(url='https://fortnite-api.com/v2/shop/br/combined', params={'language': 'pt-BR'})
 
     return response.json()
 
-# Função que pega a loja atual do fortnite, é esperado retornar uma string
-def get_shop() -> str:
+# Função que pega a loja atual do fortnite em texto, é esperado retornar uma string
+def get_shop_txt() -> str:
     
     received_data = get_request_pt_br()
         
     text = ''
 
+
+    # O código visualiza as seções da loja que possuem itens dentro para formar a imagem,
+    # se o item for parte de um pacote, é apenas adquirido o nome do pacote.
     section_name = {}
 
     for section in received_data['data']:
@@ -71,6 +75,7 @@ def get_shop() -> str:
                 else:
                     section_name[entry_section].append(f"\n{entry['bundle']['name']} - {entry['finalPrice']} Vbucks\n")
 
+    # Formatação do texto
     for key, value in section_name.items():
         text += f"\n\n{key.capitalize()}\n\n"
         for item in value:
@@ -78,27 +83,36 @@ def get_shop() -> str:
 
     return text
 
-def get_image():
 
-    
-    image_date = datetime.fromtimestamp(os.path.getmtime('imgs/loja.jpg')).astimezone(timezone.utc).date()
+# Função que pega a loja atual do fortnite em imagem.
+def get_shop():
+
+    # Verifica se a imagem da loja do dia já foi criada, se a imagem for anterior ao dia atual (UTC),
+    # uma nova imagem é criada. Se a imagem não existir, a função é iniciada para gerar uma.
+    try:
+        image_date = datetime.fromtimestamp(os.path.getmtime('imgs/loja.jpg')).astimezone(timezone.utc).date()
+    except:
+        image_date = None
 
     now = datetime.now(timezone.utc).date() 
 
-    if image_date != now:
+    if image_date != now or not image_date:
+        
         received_data = get_request_pt_br()
-            
+        
+        # Banner do projeto, a imagem se adequa ao tamanho do banner.
         banner = Image.open('imgs/banner.png')
 
         new_image = Image.new('RGBA',(banner.size))
 
+        new_image.paste(banner, (0, 0))
+
         url = ''
 
-        section_name = {}
-
-
+        # Tamanho de cada imagem individual adquirida pela API e a quantidade de imagens por linha,
+        # a largura se adequa se a seção for de pacotes ou não.
         img_size = 512
-        imgs_per_row = 10
+        imgs_per_row = 8
 
         img_size_bundle = 1024
         imgs_per_row_bundle = 4
@@ -107,10 +121,11 @@ def get_image():
 
         width_per_row_bundle = img_size_bundle * imgs_per_row_bundle
         
-        new_image.paste(banner, (0, 0))
 
         x,y = 0,banner.height
 
+        # Adiciona primeiro a imagem os itens individuais, depois de adicionar todas as imagens individuais,
+        # um novo loop é iniciado para adicionar apenas os pacotes.
         for section in received_data['data']:
             section_value = received_data['data'].get(section)
             
@@ -124,31 +139,34 @@ def get_image():
 
                             response_image = requests.get(url)
 
+                            # Cria uma borda para a imagem e um background com a cor da respectiva raridade do item
                             image = Image.open(BytesIO((response_image.content)))
                             image = ImageOps.expand(image, border=15, fill='white')
                             image_bg = Image.new('RGBA', image.size, color = rarity_table[item['rarity']['value']])
                             
-                            #TODO 
                             if x >= img_size * imgs_per_row:
                                 x = 0
                                 y += img_size
-
-                            new_width = x + image.width
+                            
+                            # Como a largura ja está definida, apenas a altura é modificada a cada item adicionado
                             new_height = y + image.height
-                                
+                            
+                            # Uma nova imagem é criada com a nova altura
                             combined_image = Image.new('RGBA', (width_per_row, new_height))
                             combined_image.paste(new_image, (0, 0))
                             combined_image.paste(image_bg, (x,y))
                             combined_image.paste(image, (x, y), image)
                             
-
+                            # Atualiza a posicao x para a proxima imagem
                             x += img_size
 
                             new_image = combined_image
-                
+        
+        # Reseta as variaveis para a secao de pacotes
         x = 0
         y = y + img_size
 
+        # Mesmo codigo da situacao anterior apenas para os pacotes
         for section in received_data['data']:
             section_value = received_data['data'].get(section)
 
@@ -173,7 +191,6 @@ def get_image():
                             x = 0
                             y += img_size_bundle
 
-                        new_width = x + image.width
                         new_height = y + image.height
                                     
                         combined_image = Image.new('RGBA', (width_per_row_bundle, new_height))
@@ -195,6 +212,226 @@ def get_image():
 
     return 'imgs/loja.jpg'
 
-get_image()
+def get_shop_daily():
 
+    try:
+        image_date = datetime.fromtimestamp(os.path.getmtime('imgs/loja_diaria.jpg')).astimezone(timezone.utc).date()
+    except:
+        image_date = None
 
+    now = datetime.now(timezone.utc).date() 
+
+    if image_date != now or not image_date:
+        
+        received_data = get_request_pt_br()
+        
+        # Banner do projeto, a imagem se adequa ao tamanho do banner.
+        banner = Image.open('imgs/banner.png')
+
+        new_image = Image.new('RGBA',(banner.size))
+
+        new_image.paste(banner, (0, 0))
+
+        url = ''
+
+        # Tamanho de cada imagem individual adquirida pela API e a quantidade de imagens por linha,
+        # a largura se adequa se a seção for de pacotes ou não.
+        img_size = 512
+        imgs_per_row = 8
+
+        img_size_bundle = 1024
+        imgs_per_row_bundle = 4
+
+        width_per_row = img_size * imgs_per_row
+
+        width_per_row_bundle = img_size_bundle * imgs_per_row_bundle
+        
+
+        x,y = 0,banner.height
+
+        # Adiciona primeiro a imagem os itens individuais, depois de adicionar todas as imagens individuais,
+        # um novo loop é iniciado para adicionar apenas os pacotes.
+        for entry in received_data['data']['daily']['entries']:
+                if entry['bundle'] == None:
+                        item = entry['items'][0]
+                        
+                        url = item['images']['icon']
+
+                        response_image = requests.get(url)
+
+                        # Cria uma borda para a imagem e um background com a cor da respectiva raridade do item
+                        image = Image.open(BytesIO((response_image.content)))
+                        image = ImageOps.expand(image, border=15, fill='white')
+                        image_bg = Image.new('RGBA', image.size, color = rarity_table[item['rarity']['value']])
+                        
+                        if x >= img_size * imgs_per_row:
+                            x = 0
+                            y += img_size
+                        
+                        # Como a largura ja está definida, apenas a altura é modificada a cada item adicionado
+                        new_height = y + image.height
+                        
+                        # Uma nova imagem é criada com a nova altura
+                        combined_image = Image.new('RGBA', (width_per_row, new_height))
+                        combined_image.paste(new_image, (0, 0))
+                        combined_image.paste(image_bg, (x,y))
+                        combined_image.paste(image, (x, y), image)
+                        
+                        # Atualiza a posicao x para a proxima imagem
+                        x += img_size
+                        new_image = combined_image
+        
+        # Reseta as variaveis para a secao de pacotes
+        x = 0
+        y = y + img_size
+
+        # Mesmo codigo da situacao anterior apenas para os pacotes
+
+        for entry in received_data['data']['daily']['entries']:
+            if entry['bundle'] != None:
+
+                item = entry['items'][0]
+                        
+                url = entry['bundle']['image']
+
+                response_image = requests.get(url)
+
+                image = Image.open(BytesIO((response_image.content)))
+                image = image.resize((img_size_bundle, img_size_bundle))
+                image = ImageOps.expand(image, border=15, fill='white')
+                image_bg = Image.new('RGBA', image.size, color = rarity_table[item['rarity']['value']])
+                
+                if x >= img_size_bundle * imgs_per_row_bundle:
+                    x = 0
+                    y += img_size_bundle
+
+                new_height = y + image.height
+            
+                combined_image = Image.new('RGBA', (width_per_row_bundle, new_height))
+                combined_image.paste(new_image, (0, 0))
+                combined_image.paste(image_bg, (x,y))
+                combined_image.paste(image, (x, y),image)
+                        
+                x += img_size_bundle
+                new_image = combined_image
+        
+
+        #new_image = ImageOps.expand(new_image, border=30, fill='white')
+        
+        new_image = new_image.resize((new_image.width//4, new_image.height//4))
+
+        new_image = new_image.convert('RGB').save('imgs/loja_diaria.jpg', 'JPEG')
+
+    return 'imgs/loja_diaria.jpg'
+
+def get_shop_featured():
+
+    try:
+        image_date = datetime.fromtimestamp(os.path.getmtime('imgs/loja_destaque.jpg')).astimezone(timezone.utc).date()
+    except:
+        image_date = None
+
+    now = datetime.now(timezone.utc).date() 
+
+    if image_date != now or not image_date:
+        
+        received_data = get_request_pt_br()
+        
+        # Banner do projeto, a imagem se adequa ao tamanho do banner.
+        banner = Image.open('imgs/banner.png')
+
+        new_image = Image.new('RGBA',(banner.size))
+
+        new_image.paste(banner, (0, 0))
+
+        url = ''
+
+        # Tamanho de cada imagem individual adquirida pela API e a quantidade de imagens por linha,
+        # a largura se adequa se a seção for de pacotes ou não.
+        img_size = 512
+        imgs_per_row = 8
+
+        img_size_bundle = 1024
+        imgs_per_row_bundle = 4
+
+        width_per_row = img_size * imgs_per_row
+
+        width_per_row_bundle = img_size_bundle * imgs_per_row_bundle
+        
+
+        x,y = 0,banner.height
+
+        # Adiciona primeiro a imagem os itens individuais, depois de adicionar todas as imagens individuais,
+        # um novo loop é iniciado para adicionar apenas os pacotes.
+        for entry in received_data['data']['featured']['entries']:
+                if entry['bundle'] == None:
+                        item = entry['items'][0]
+                        
+                        url = item['images']['icon']
+
+                        response_image = requests.get(url)
+
+                        # Cria uma borda para a imagem e um background com a cor da respectiva raridade do item
+                        image = Image.open(BytesIO((response_image.content)))
+                        image = ImageOps.expand(image, border=15, fill='white')
+                        image_bg = Image.new('RGBA', image.size, color = rarity_table[item['rarity']['value']])
+                        
+                        if x >= img_size * imgs_per_row:
+                            x = 0
+                            y += img_size
+                        
+                        # Como a largura ja está definida, apenas a altura é modificada a cada item adicionado
+                        new_height = y + image.height
+                        
+                        # Uma nova imagem é criada com a nova altura
+                        combined_image = Image.new('RGBA', (width_per_row, new_height))
+                        combined_image.paste(new_image, (0, 0))
+                        combined_image.paste(image_bg, (x,y))
+                        combined_image.paste(image, (x, y), image)
+                        
+                        # Atualiza a posicao x para a proxima imagem
+                        x += img_size
+                        new_image = combined_image
+        
+        # Reseta as variaveis para a secao de pacotes
+        x = 0
+        y = y + img_size
+
+        # Mesmo codigo da situacao anterior apenas para os pacotes
+
+        for entry in received_data['data']['featured']['entries']:
+            if entry['bundle'] != None:
+
+                item = entry['items'][0]
+                        
+                url = entry['bundle']['image']
+
+                response_image = requests.get(url)
+
+                image = Image.open(BytesIO((response_image.content)))
+                image = image.resize((img_size_bundle, img_size_bundle))
+                image = ImageOps.expand(image, border=15, fill='white')
+                image_bg = Image.new('RGBA', image.size, color = rarity_table[item['rarity']['value']])
+                
+                if x >= img_size_bundle * imgs_per_row_bundle:
+                    x = 0
+                    y += img_size_bundle
+
+                new_height = y + image.height
+            
+                combined_image = Image.new('RGBA', (width_per_row_bundle, new_height))
+                combined_image.paste(new_image, (0, 0))
+                combined_image.paste(image_bg, (x,y))
+                combined_image.paste(image, (x, y),image)
+                        
+                x += img_size_bundle
+                new_image = combined_image
+        
+
+        #new_image = ImageOps.expand(new_image, border=30, fill='white')
+        
+        new_image = new_image.resize((new_image.width//4, new_image.height//4))
+
+        new_image = new_image.convert('RGB').save('imgs/loja_destaque.jpg', 'JPEG')
+
+    return 'imgs/loja_destaque.jpg'
