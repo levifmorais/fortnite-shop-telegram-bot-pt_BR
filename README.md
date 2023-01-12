@@ -33,6 +33,6 @@
 
 Forks e pull requests são bem-vindos. Para mudanças importantes, abra uma issue para discutir o que você gostaria de mudar!
 
-### Exemplo
+### Resultado
 
-<img src='imgs/loja.jpg' style='width:500px; display:block; margin-left:auto; margin-right: auto;'/>
+<img src='imgs/loja.jpg' style='width:500px;'/>
