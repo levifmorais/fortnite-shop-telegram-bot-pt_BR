@@ -35,4 +35,4 @@ Forks e pull requests são bem-vindos. Para mudanças importantes, abra uma issu
 
 ### Resultado
 
-<img src='imgs/loja.jpg' style='width:500px;'/>
+<img src='src/imgs/loja.jpg' style='width:500px;'/>
