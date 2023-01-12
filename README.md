@@ -8,7 +8,7 @@
 
 - dotenv
 
-- python-telegram-bot 13.13 (Qualquer versão antes da 20.0 funciona)
+- python-telegram-bot 13.13 (Qualquer versão antes da 20.0 funcionará)
 
 #### Configuração
 
@@ -18,7 +18,7 @@
 
 3. Digite /newbot e escolha um nome para o bot, além de um nome de usuário.
 
-4. Copie o token gerado pelo BotFather e coloque em um arquivo **.env**, atribua o token há uma variável de nome *TOKEN*. Coloque o .env no .gitignore para impedir o upload para o git.
+4. Copie o token gerado pelo BotFather e coloque em um arquivo **.env**, atribua o token para uma variável de nome *TOKEN*. Coloque o .env no .gitignore para impedir o upload para o git.
 
 5. Instale a biblioteca *python-telegram-bot* com o comando: \
 ```pip install python-telegram-bot==13.13```

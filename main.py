@@ -22,9 +22,11 @@ def help_command(update, context):
     commands = """
     Comandos disponíveis:
     /loja - Mostra a loja atual do Fortnite
-    /lojatxt - Mostra a loja atual do Fortnite em formato de texto
     /diaria - Mostra apenas os itens na seção Diária
     /destaque - Mostra apenas os itens na seção Destaque
+    /lojatxt - Mostra a loja atual do Fortnite em formato de texto
+    /diariatxt - Mostra apenas  os itens na seção Diária em texto
+    /destaquetxt - Mostra apenas os itens na seção Destaque em texto
     /ajuda - Mostra os comandos disponíveis
     """
     
@@ -41,10 +43,40 @@ def shop_txt_command(update, context):
     for text in msgs:
         update.message.reply_text(text=text)
 
+def shop_txt_daily_command(update, context):
+    message = requests_api.get_shop_daily_text()
+
+    msgs = [message[i:i + 4096] for i in range(0, len(message), 4096)]
+    for text in msgs:
+        update.message.reply_text(text=text)
+
+def shop_txt_featured_command(update, context):
+    message = requests_api.get_shop_featured_text()
+
+    msgs = [message[i:i + 4096] for i in range(0, len(message), 4096)]
+    for text in msgs:
+        update.message.reply_text(text=text)
+
 # Comando /loja
 def shop_command(update, context):
-
+    
     message = requests_api.get_shop()
+    
+    print('gerando imagem...')
+
+    context.bot.send_photo(chat_id=update.message.chat_id, photo=open(message, 'rb'), timeout = 1000)
+
+def shop_daily_command(update, context):
+
+    message = requests_api.get_shop_daily()
+    
+    print('gerando imagem...')
+
+    context.bot.send_photo(chat_id=update.message.chat_id, photo=open(message, 'rb'), timeout = 1000)
+
+def shop_featured_command(update, context):
+
+    message = requests_api.get_shop_featured()
     
     print('gerando imagem...')
 
@@ -74,9 +106,13 @@ def main():
 
     # Adiciona os comandos e suas respectivas funções
     dp.add_handler(CommandHandler("start", start_command))
-    dp.add_handler(CommandHandler("ajuda", help_command))
-    dp.add_handler(CommandHandler("lojatxt", shop_txt_command))
     dp.add_handler(CommandHandler("loja", shop_command))
+    dp.add_handler(CommandHandler("diaria", shop_daily_command))
+    dp.add_handler(CommandHandler("destaque", shop_featured_command))
+    dp.add_handler(CommandHandler("lojatxt", shop_txt_command))
+    dp.add_handler(CommandHandler("diariatxt", shop_txt_daily_command))
+    dp.add_handler(CommandHandler("destaquetxt", shop_txt_featured_command))
+    dp.add_handler(CommandHandler("ajuda", help_command))
 
     # Adiciona a função que trata as mensagens do usuário, caso não seja um comando.
     dp.add_handler(MessageHandler(Filters.text, handle_message))
