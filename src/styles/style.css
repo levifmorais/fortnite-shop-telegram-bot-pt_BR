@@ -201,4 +201,8 @@ padding: 60px;
     .descricao {
         text-align: left;
     }
+
+    .column-respostas {
+        align-items: flex-start;
+    }
 }
