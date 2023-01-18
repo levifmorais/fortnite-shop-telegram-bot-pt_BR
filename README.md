@@ -1,38 +1,46 @@
-# Instruções para configurar ambiente de desenvolvimento
+# Getting Started with Create React App
 
-### Requisitos básicos
+This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
-#### Dependências
+## Available Scripts
 
-- Python 3.9 ou superior (As versões anteriores não foram testadas)
+In the project directory, you can run:
 
-- dotenv
+### `npm start`
 
-- python-telegram-bot 13.13 (Qualquer versão antes da 20.0 funcionará)
+Runs the app in the development mode.\
+Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 
-#### Configuração
+The page will reload if you make edits.\
+You will also see any lint errors in the console.
 
-1. Abra o Telegram e procure por @BotFather.
+### `npm test`
 
-2. Clique em Start.
+Launches the test runner in the interactive watch mode.\
+See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
 
-3. Digite /newbot e escolha um nome para o bot, além de um nome de usuário.
+### `npm run build`
 
-4. Copie o token gerado pelo BotFather e coloque em um arquivo **.env**, atribua o token para uma variável de nome *TOKEN*. Coloque o .env no .gitignore para impedir o upload para o git.
+Builds the app for production to the `build` folder.\
+It correctly bundles React in production mode and optimizes the build for the best performance.
 
-5. Instale a biblioteca *python-telegram-bot* com o comando: \
-```pip install python-telegram-bot==13.13```
+The build is minified and the filenames include the hashes.\
+Your app is ready to be deployed!
 
-6. Execute o arquivo *main.py* com o comando: \
-```python main.py```
+See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
 
-7. Entre na conversa com o bot que você criou no Telegram e digite /Start. Em seguida, use os comandos disponíveis em /ajuda para utilizar suas funcionalidades.
+### `npm run eject`
 
+**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
 
-### Contribuição
+If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
 
-Forks e pull requests são bem-vindos. Para mudanças importantes, abra uma issue para discutir o que você gostaria de mudar!
+Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
 
-### Resultado
+You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
 
-<img src='src/imgs/loja.jpg' style='width:500px;'/>
+## Learn More
+
+You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+
+To learn React, check out the [React documentation](https://reactjs.org/).
